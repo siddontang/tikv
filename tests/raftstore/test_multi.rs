@@ -147,6 +147,13 @@ fn test_multi_random_restart<T: Simulator>(cluster: &mut Cluster<T>,
 
         // verify whether data is actually being replicated
         must_get_equal(&cluster.get_engine(id), key, value);
+
+        let (k, v) = (b"a2", b"v2");
+        assert_eq!(cluster.get(k), None);
+        cluster.put(k, v);
+        assert_eq!(cluster.get(k), Some(v.to_vec()));
+        cluster.delete(k);
+        assert_eq!(cluster.get(k), None);
     }
 }
 

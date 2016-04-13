@@ -43,6 +43,9 @@ mod server;
 mod pd;
 #[path="../../tests/raftstore/pd_ask.rs"]
 mod pd_ask;
+#[allow(unused)]
+#[path="../../tests/raftstore/transport_simulate.rs"]
+mod transport_simulate;
 
 use test::BenchSamples;
 

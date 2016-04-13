@@ -17,14 +17,20 @@ use super::util::*;
 use super::cluster::{Cluster, Simulator};
 use super::node::new_node_cluster;
 use super::server::new_server_cluster;
+use super::transport_simulate;
 
 fn test_multi_base<T: Simulator>(cluster: &mut Cluster<T>) {
+    test_multi_base_bad_transport(cluster, transport_simulate::Strategy::Default);
+}
+
+fn test_multi_base_bad_transport<T: Simulator>(cluster: &mut Cluster<T>,
+                                               strategy: transport_simulate::Strategy) {
     // init_log();
 
     // test a cluster with five nodes [1, 5], only one region (region 1).
     // every node has a store and a peer with same id as node's.
     cluster.bootstrap_region().expect("");
-    cluster.start();
+    cluster.start_with_strategy(vec![strategy]);
 
     let (key, value) = (b"a1", b"v1");
 
@@ -49,7 +55,6 @@ fn test_multi_base<T: Simulator>(cluster: &mut Cluster<T>) {
 
     // TODO add stale epoch test cases.
 }
-
 
 fn test_multi_leader_crash<T: Simulator>(cluster: &mut Cluster<T>) {
     cluster.bootstrap_region().expect("");
@@ -129,10 +134,38 @@ fn test_multi_node_base() {
 }
 
 #[test]
+fn test_multi_node_base_latency() {
+    let count = 5;
+    let mut cluster = new_node_cluster(0, count);
+    test_multi_base_bad_transport(&mut cluster, transport_simulate::Strategy::Latency(10));
+}
+
+#[test]
+fn test_multi_node_base_loss_packet() {
+    let count = 5;
+    let mut cluster = new_node_cluster(0, count);
+    test_multi_base_bad_transport(&mut cluster, transport_simulate::Strategy::LossPacket(10));
+}
+
+#[test]
 fn test_multi_server_base() {
     let count = 5;
     let mut cluster = new_server_cluster(0, count);
     test_multi_base(&mut cluster)
+}
+
+#[test]
+fn test_multi_server_base_latency() {
+    let count = 5;
+    let mut cluster = new_server_cluster(0, count);
+    test_multi_base_bad_transport(&mut cluster, transport_simulate::Strategy::Latency(10));
+}
+
+#[test]
+fn test_multi_server_base_loss_packet() {
+    let count = 5;
+    let mut cluster = new_server_cluster(0, count);
+    test_multi_base_bad_transport(&mut cluster, transport_simulate::Strategy::LossPacket(10));
 }
 
 #[test]

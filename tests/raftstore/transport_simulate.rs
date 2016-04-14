@@ -15,8 +15,7 @@ pub enum Strategy {
 }
 
 trait Filter: Send + Sync {
-    // before return true means SimulateTransport will stop handle further filters,
-    // it will discard the msg, call after function and then return.
+    // in a SimulateTransport, if any filter's before return true, msg will be discard
     fn before(&self, msg: &RaftMessage) -> bool;
     // with after provided, one can change the return value arbitrarily
     fn after(&self, Result<()>) -> Result<()>;
@@ -85,13 +84,17 @@ impl<T: Transport> SimulateTransport<T> {
 
 impl<T: Transport> Transport for SimulateTransport<T> {
     fn send(&self, msg: RaftMessage) -> Result<()> {
+        let mut discard = false;
         for strategy in &self.filters {
             if strategy.before(&msg) {
-                return strategy.after(Ok(()));
+                discard = true;
             }
         }
 
-        let mut res = self.trans.read().unwrap().send(msg);
+        let mut res = Ok(());
+        if !discard {
+            res = self.trans.read().unwrap().send(msg);
+        }
 
         for strategy in self.filters.iter().rev() {
             res = strategy.after(res);

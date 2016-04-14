@@ -106,7 +106,7 @@ impl<T: Simulator> Cluster<T> {
     }
 
     pub fn start(&mut self) {
-        self.start_with_strategy(vec![Strategy::Default]);
+        self.start_with_strategy(vec![]);
     }
 
     pub fn start_with_strategy(&mut self, strategy: Vec<Strategy>) {
@@ -119,7 +119,7 @@ impl<T: Simulator> Cluster<T> {
     }
 
     pub fn run_node(&mut self, node_id: u64) {
-        self.run_node_with_strategy(node_id, vec![Strategy::Default]);
+        self.run_node_with_strategy(node_id, vec![]);
     }
 
     pub fn run_node_with_strategy(&mut self, node_id: u64, strategy: Vec<Strategy>) {

@@ -9,7 +9,6 @@ use self::Strategy::*;
 
 #[derive(Clone)]
 pub enum Strategy {
-    Default,
     LossPacket(u32),
     Latency(u64),
     OutOrder,
@@ -65,9 +64,6 @@ impl<T: Transport> SimulateTransport<T> {
         let mut filters: Vec<Box<Filter>> = vec![];
         for s in strategy {
             match s {
-                Default => {
-                    continue;
-                }
                 LossPacket(rate) => {
                     filters.push(Box::new(FilterLossPacket(rate)));
                 }
@@ -97,7 +93,7 @@ impl<T: Transport> Transport for SimulateTransport<T> {
 
         let mut res = self.trans.read().unwrap().send(msg);
 
-        for strategy in &self.filters {
+        for strategy in self.filters.iter().rev() {
             res = strategy.after(res);
         }
 

@@ -150,14 +150,14 @@ impl<T: Simulator> Cluster<T> {
                                   mut request: RaftCmdRequest,
                                   timeout: Duration)
                                   -> Result<RaftCmdResponse> {
-        for _ in 0..200 {
+        for _ in 0..3 {
             if let Some(leader) = self.leader_of_region(region_id) {
                 request.mut_header().set_peer(leader);
                 return self.call_command(request, timeout);
             }
             sleep_ms(10);
         }
-        Err(Error::Timeout("can't get leader of region after retry 200 times".to_string()))
+        Err(box_err!("can't get leader of region"))
     }
 
     pub fn leader_of_region(&mut self, region_id: u64) -> Option<metapb::Peer> {

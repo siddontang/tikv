@@ -69,7 +69,7 @@ fn test_base_split_region<T: Simulator>(cluster: &mut Cluster<T>) {
     let region_id = left.get_id();
     let resp = cluster.call_command_on_leader(region_id, get, Duration::from_secs(3)).unwrap();
     assert!(resp.get_header().has_error());
-    assert!(resp.get_header().get_error().has_key_not_in_region());
+    assert!(resp.get_header().get_error().has_key_not_in_region(), format!("{:?}", resp));
 }
 
 #[test]

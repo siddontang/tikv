@@ -12,9 +12,12 @@
 // limitations under the License.
 
 use super::server::*;
+use super::util;
 
 #[test]
 fn test_region_detail() {
+    util::init_log();
+    
     let count = 5;
     let mut cluster = new_server_cluster(0, count);
     cluster.bootstrap_region().expect("");

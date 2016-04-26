@@ -16,7 +16,7 @@ release:
 test:
 	# todo remove ulimit once issue #372 of mio is resolved.
 	# ulimit -n 2000 && LOG_LEVEL=DEBUG RUST_BACKTRACE=1 cargo test --features ${ENABLE_FEATURES} -- --nocapture 
-	ulimit -n 2000 && LOG_LEVEL=DEBUG RUST_BACKTRACE=1 cargo test --features ${ENABLE_FEATURES} test_region_detail -- --nocapture 
+	ulimit -n 2000 && LOG_LEVEL=DEBUG RUST_BACKTRACE=1 cargo test --features ${ENABLE_FEATURES} test_server_base_split_region -- --nocapture 
 
 bench:
 	# todo remove ulimit once issue #372 of mio is resolved.

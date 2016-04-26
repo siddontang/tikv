@@ -29,7 +29,7 @@ pub const REGION_MAX_SIZE: u64 = 50000;
 pub const REGION_SPLIT_SIZE: u64 = 30000;
 
 fn test_base_split_region<T: Simulator>(cluster: &mut Cluster<T>) {
-    // init_log();
+    util::init_log();
 
     cluster.bootstrap_region().expect("");
     cluster.start();

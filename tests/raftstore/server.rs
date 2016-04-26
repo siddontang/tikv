@@ -64,28 +64,28 @@ impl ServerCluster {
 
 
     fn pool_get(&self, addr: &SocketAddr) -> Result<TcpStream> {
-        // {
-        //     let mut conns = self.conns
-        //                         .lock()
-        //                         .unwrap();
-        //     let conn = conns.get_mut(addr);
-        //     if let Some(mut pool) = conn {
-        //         if !pool.is_empty() {
-        //             return Ok(pool.pop().unwrap());
-        //         }
-        //     }
-        // }
+        {
+            let mut conns = self.conns
+                                .lock()
+                                .unwrap();
+            let conn = conns.get_mut(addr);
+            if let Some(mut pool) = conn {
+                if !pool.is_empty() {
+                    return Ok(pool.pop().unwrap());
+                }
+            }
+        }
 
         let conn = make_std_tcp_conn(addr).unwrap();
         Ok(conn)
     }
 
     fn pool_put(&self, addr: &SocketAddr, conn: TcpStream) {
-        // let mut conns = self.conns
-        //                     .lock()
-        //                     .unwrap();
-        // let p = conns.entry(*addr).or_insert_with(Vec::new);
-        // p.push(conn);
+        let mut conns = self.conns
+                            .lock()
+                            .unwrap();
+        let p = conns.entry(*addr).or_insert_with(Vec::new);
+        p.push(conn);
     }
 }
 

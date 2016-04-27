@@ -64,18 +64,18 @@ impl<T: PdClient> Runner<T> {
         // Store address may be changed?
         let pd_client = self.pd_client.clone();
         let cluster_id = self.cluster_id;
-        let s = try!(pd_client.rl()
+        let s = try!(self.store_addrs.entry(store_id).or_try_insert_with(|| {
+            pd_client.rl()
                      .get_store(cluster_id, store_id)
-                     .map(|s| s.get_address().to_owned()));
-        self.store_addrs.insert(store_id, s);
-        Ok(self.store_addrs.get(&store_id).unwrap())
-        // let s = try!(self.store_addrs.entry(store_id).or_try_insert_with(|| {
-        //     pd_client.rl()
-        //              .get_store(cluster_id, store_id)
-        //              .map(|s| s.get_address().to_owned())
-        // }));
+                     .map(|s| s.get_address().to_owned())
+        }));
 
-        //Ok(s)
+        let store_addr = self.pd_client.rl().get_store(cluster_id, store_id).unwrap().get_address().to_owned();
+        if s.to_owned() != store_addr {
+            panic!("get address {} != {}", s, store_addr);
+        }
+
+        Ok(s)
     }
 }
 

@@ -110,9 +110,9 @@ impl Simulator for ServerCluster {
 
         // Now we cache the store address, so here we should re-use last
         // listening address for the same store.
-        // if let Some(addr) = self.addrs.get(&node_id) {
-        //     cfg.addr = format!("{}", addr);
-        // }
+        if let Some(addr) = self.addrs.get(&node_id) {
+            cfg.addr = format!("{}", addr);
+        }
 
         let listener = bind(&cfg.addr).unwrap();
         let addr = listener.local_addr().unwrap();

@@ -110,10 +110,9 @@ impl Simulator for ServerCluster {
 
         // Now we cache the store address, so here we should re-use last
         // listening address for the same store.
-        if let Some(addr) = self.addrs.get(&node_id) {
-            cfg.addr = format!("{}", addr);
-            println!("in cache:  {:?} {}", cfg.addr, node_id);
-        }
+        // if let Some(addr) = self.addrs.get(&node_id) {
+        //     cfg.addr = format!("{}", addr);
+        // }
 
         let listener = bind(&cfg.addr).unwrap();
         let addr = listener.local_addr().unwrap();
@@ -130,7 +129,6 @@ impl Simulator for ServerCluster {
         assert!(node_id == 0 || node_id == node.id());
         let node_id = node.id();
 
-        println!("listening {:?} {}", cfg.addr, node_id);
 
         let store = create_raft_storage(node, engine).unwrap();
 
@@ -157,8 +155,6 @@ impl Simulator for ServerCluster {
             .lock()
             .unwrap()
             .remove(addr);
-
-        println!("stop node {} {}", addr, node_id);
 
         ch.send(Msg::Quit).unwrap();
         h.join().unwrap();

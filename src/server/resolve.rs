@@ -67,12 +67,22 @@ impl<T: PdClient> Runner<T> {
         let s = try!(self.store_addrs.entry(store_id).or_try_insert_with(|| {
             pd_client.rl()
                      .get_store(cluster_id, store_id)
-                     .map(|s| s.get_address().to_owned())
+                     .map(|s| {
+                         let addr = s.get_address().to_owned();
+                         println!("get store address {:?}", addr);
+                         addr
+
+                     })
         }));
 
-        let store_addr = self.pd_client.rl().get_store(cluster_id, store_id).unwrap().get_address().to_owned();
+        let store_addr = self.pd_client
+                             .rl()
+                             .get_store(cluster_id, store_id)
+                             .unwrap()
+                             .get_address()
+                             .to_owned();
         if s.to_owned() != store_addr {
-            panic!("get address {} != {}", s, store_addr);
+            panic!("get address {:?} != {:?}", s, store_addr);
         }
 
         Ok(s)

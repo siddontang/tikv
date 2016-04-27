@@ -237,6 +237,7 @@ impl<'a, T: 'a, V: 'a, E> TryInsertWith<'a, V, E> for Entry<'a, T, V> {
 #[cfg(test)]
 mod tests {
     use std::net::{SocketAddr, AddrParseError};
+    use std::collections::HashMap;
     use super::*;
 
     #[test]
@@ -262,5 +263,17 @@ mod tests {
             let ret: Result<SocketAddr, AddrParseError> = addr.parse();
             assert_eq!(ret.is_ok(), ok);
         }
+    }
+
+    #[test]
+    fn test_or_try_insert_with() {
+        let mut a: HashMap<u64, String> = HashMap::new();
+        a.insert(1, "a".to_owned());
+        a.insert(2, "b".to_owned());
+
+        let b = a.entry(4)
+                 .or_try_insert_with(|| -> ::std::io::Result<String> { Ok("c".to_owned()) })
+                 .unwrap();
+        assert_eq!(b, "c");
     }
 }

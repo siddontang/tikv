@@ -110,14 +110,14 @@ impl<T: Simulator> Cluster<T> {
     }
 
     pub fn start_with_strategy(&mut self, strategy: Vec<Strategy>) {
-        {
-            let mut sim = self.sim.wl();
-            for engine in &self.dbs {
-                let node_id = sim.run_node(0, self.cfg.clone(), engine.clone(), strategy.clone());
-                self.engines.insert(node_id, engine.clone());
-            }
+        for engine in &self.dbs {
+            let node_id = self.sim
+                              .wl()
+                              .run_node(0, self.cfg.clone(), engine.clone(), strategy.clone());
+            self.engines.insert(node_id, engine.clone());
         }
-        sleep_ms(500)
+
+        sleep_ms(100)
     }
 
     pub fn run_node(&mut self, node_id: u64) {

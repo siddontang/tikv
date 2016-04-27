@@ -158,6 +158,8 @@ impl Simulator for ServerCluster {
             .unwrap()
             .remove(addr);
 
+        println!("stop node {} {}", addr, node_id);
+
         ch.send(Msg::Quit).unwrap();
         h.join().unwrap();
     }

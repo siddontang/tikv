@@ -361,8 +361,8 @@ fn test_server_apply_new_version_snapshot() {
 #[test]
 fn test_panic_for_ci() {
     let mut cluster = new_node_cluster(0, 3);
-    cluster.run()
+    cluster.run();
 
-    cluster.must_put(b"k1", b"v1")
+    cluster.must_put(b"k1", b"v1");
     cluster.get(b"k2").unwrap();
 }

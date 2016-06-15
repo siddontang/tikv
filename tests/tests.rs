@@ -51,9 +51,3 @@ fn _travis_setup() {
         self::util::init_log();
     }
 }
-
-#[test]
-fn test_must_panic_with_log() {
-    info!("should panic");
-    panic!("hello panic");
-}

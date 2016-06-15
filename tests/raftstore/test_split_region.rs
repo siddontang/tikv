@@ -357,3 +357,12 @@ fn test_server_apply_new_version_snapshot() {
     let mut cluster = new_server_cluster(0, 3);
     test_apply_new_version_snapshot(&mut cluster);
 }
+
+#[test]
+fn test_panic_for_ci() {
+    let mut cluster = new_node_cluster(0, 3);
+    cluster.run()
+
+    cluster.must_put(b"k1", b"v1")
+    cluster.get(b"k2").unwrap();
+}

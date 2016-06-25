@@ -4,6 +4,7 @@ cache:
   directories:
   - $HOME/.cache/rocksdb
   - $HOME/.cache/kcov
+  - $HOME/.cache/etcd
 
 matrix:
   include:
@@ -14,15 +15,14 @@ matrix:
       addons:
          apt:
             sources: ['ubuntu-toolchain-r-test']
-            packages: ['g++-4.8', 'zlib1g-dev', 'libbz2-dev', 'libsnappy-dev', 
-            'libjemalloc-dev', 'curl', 'libdw-dev', 'libelf-dev', 
-            'elfutils', 'binutils-dev', 'git-core']
+            packages: ['g++-4.8', 'zlib1g-dev', 'libbz2-dev', 'libsnappy-dev', 'libjemalloc-dev', 'curl', 'libdw-dev', 'libelf-dev', 'elfutils', 'binutils-dev']
     - os: osx
       rust: nightly
 
 install:
   - export KCOV_DIR=$HOME/.cache/kcov
   - export ROCKSDB_DIR=$HOME/.cache/rocksdb
+  - export ETCD_DIR=$HOME/.cache/etcd
   - make -f travis-build/Makefile prepare_${TRAVIS_OS_NAME}
 
 script:

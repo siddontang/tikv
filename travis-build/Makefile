@@ -35,6 +35,7 @@ ${KCOV_DIR}/kcov:
 	cp src/kcov ${KCOV_DIR}/kcov
 
 ${ETCD_DIR}/etcd:
+	export GOPATH=${ETCD_DIR} && \
 	git clone https://github.com/coreos/etcd.git $GOPATH/src/github.com/coreos/etcd && \
   	cd $GOPATH/src/github.com/coreos/etcd && \
   	./build && \
@@ -42,10 +43,12 @@ ${ETCD_DIR}/etcd:
 
 prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov ${ETCD_DIR}/etcd
 
-prepare_osx: ${ETCD_DIR}/etcd
+prepare_brew: 
 	brew update && \
 	brew install gflags snappy rocksdb
 
+prepare_osx: prepare_brew ${ETCD_DIR}/etcd
+	
 test_linux:
 	export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ROCKSDB_DIR}" && \
 	export LIBRARY_PATH="${LIBRARY_PATH}:${ROCKSDB_DIR}" && \

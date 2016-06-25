@@ -30,7 +30,7 @@ install:
 
 script:
   - export ETCD_DIR=$HOME/.cache/etcd
-  - export PATH=${ETCD_DIR}/bin:${PATH}
+  - export PATH=${ETCD_DIR}:${PATH}
   - make -f travis-build/Makefile test_${TRAVIS_OS_NAME}
 
 after_success:

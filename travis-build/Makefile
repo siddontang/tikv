@@ -35,19 +35,29 @@ ${KCOV_DIR}/kcov:
 	cp src/kcov ${KCOV_DIR}/kcov
 
 ${ETCD_DIR}/etcd:
+	export GOROOT=/usr/local/go && \
+	export PATH="${GOROOT}/bin:$PATH" && \
 	export GOPATH=${ETCD_DIR} && \
 	git clone https://github.com/coreos/etcd.git $GOPATH/src/github.com/coreos/etcd && \
   	cd $GOPATH/src/github.com/coreos/etcd && \
   	./build && \
   	cp -f ./bin/etcd ${ETCD_DIR}/etcd
 
-prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov ${ETCD_DIR}/etcd
+linux_go:
+	curl -L https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz -o go.tar.gz && \
+	tar -C /usr/local -xzf go.tar.gz 
+
+mac_go:
+	curl -L https://storage.googleapis.com/golang/go1.6.2.darwin-amd64.tar.gz -o go.tar.gz && \
+	tar -C /usr/local -xzf go.tar.gz 
+
+prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov linux_go ${ETCD_DIR}/etcd
 
 prepare_brew: 
 	brew update && \
 	brew install gflags snappy rocksdb
 
-prepare_osx: prepare_brew ${ETCD_DIR}/etcd
+prepare_osx: prepare_brew mac_go ${ETCD_DIR}/etcd
 	
 test_linux:
 	export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ROCKSDB_DIR}" && \

@@ -34,40 +34,33 @@ ${KCOV_DIR}/kcov:
 	mkdir -p ${KCOV_DIR} && \
 	cp src/kcov ${KCOV_DIR}/kcov
 
-${ETCD_DIR}/etcd:
-	export GOROOT=/usr/local/go && \
-	export PATH="${GOROOT}/bin:$PATH" && \
-	export GOPATH=${ETCD_DIR} && \
-	git clone https://github.com/coreos/etcd.git $GOPATH/src/github.com/coreos/etcd && \
-  	cd $GOPATH/src/github.com/coreos/etcd && \
-  	./build && \
-  	cp -f ./bin/etcd ${ETCD_DIR}/etcd
+linux_etcd:
+	curl -L  https://github.com/coreos/etcd/releases/download/v3.0.0-beta.0/etcd-v3.0.0-beta.0-linux-amd64.tar.gz -o etcd-v3.0.0-beta.0-linux-amd64.tar.gz && \
+	tar xzvf etcd-v3.0.0-beta.0-linux-amd64.tar.gz && \
+	cd etcd-v3.0.0-beta.0-linux-amd64 && \
+	cp -f etcd /usr/local/bin
 
-linux_go:
-	curl -L https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz -o go.tar.gz && \
-	tar -C /usr/local -xzf go.tar.gz 
+mac_etcd:
+	curl -L  https://github.com/coreos/etcd/releases/download/v3.0.0-beta.0/etcd-v3.0.0-beta.0-darwin-amd64.zip -o etcd-v3.0.0-beta.0-darwin-amd64.zip && \
+	unzip etcd-v3.0.0-beta.0-darwin-amd64.zip && \
+	cd etcd-v3.0.0-beta.0-darwin-amd64 && \
+	cp -f etcd /usr/local/bin 
 
-mac_go:
-	curl -L https://storage.googleapis.com/golang/go1.6.2.darwin-amd64.tar.gz -o go.tar.gz && \
-	tar -C /usr/local -xzf go.tar.gz 
-
-prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov linux_go ${ETCD_DIR}/etcd
+prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov linux_etcd
 
 prepare_brew: 
 	brew update && \
 	brew install gflags snappy rocksdb
 
-prepare_osx: prepare_brew mac_go ${ETCD_DIR}/etcd
+prepare_osx: prepare_brew mac_etcd
 	
 test_linux:
 	export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ROCKSDB_DIR}" && \
 	export LIBRARY_PATH="${LIBRARY_PATH}:${ROCKSDB_DIR}" && \
-	export PATH="$PATH:${ETCD_DIR}" && \
 	ulimit -n 2000 && \
 	./travis-build/test.sh
 
 test_osx:
-	export PATH="$PATH:${ETCD_DIR}" && \
 	./travis-build/test.sh
 
 cover_linux:

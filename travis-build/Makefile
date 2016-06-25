@@ -34,6 +34,7 @@ ${KCOV_DIR}/kcov:
 	mkdir -p ${KCOV_DIR} && \
 	cp src/kcov ${KCOV_DIR}/kcov
 
+# TODO: After Etcd releases binary package, we don't need to install go and then build the source.
 ${ETCD_DIR}/etcd:
 	git clone --depth=1 https://github.com/coreos/etcd.git "${GOPATH}/src/github.com/coreos/etcd" && \
   	cd "${GOPATH}/src/github.com/coreos/etcd" && \

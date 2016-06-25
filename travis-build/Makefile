@@ -34,19 +34,27 @@ ${KCOV_DIR}/kcov:
 	mkdir -p ${KCOV_DIR} && \
 	cp src/kcov ${KCOV_DIR}/kcov
 
-prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov
+${ETCD_DIR}/etcd:
+	git clone https://github.com/coreos/etcd.git $GOPATH/src/github.com/coreos/etcd && \
+  	cd $GOPATH/src/github.com/coreos/etcd && \
+  	./build && \
+  	cp -f ./bin/etcd ${ETCD_DIR}/etcd
 
-prepare_osx:
+prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov ${ETCD_DIR}/etcd
+
+prepare_osx: ${ETCD_DIR}/etcd
 	brew update && \
 	brew install gflags snappy rocksdb
 
 test_linux:
 	export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ROCKSDB_DIR}" && \
 	export LIBRARY_PATH="${LIBRARY_PATH}:${ROCKSDB_DIR}" && \
+	export PATH="$PATH:${ETCD_DIR}" && \
 	ulimit -n 2000 && \
 	./travis-build/test.sh
 
 test_osx:
+	export PATH="$PATH:${ETCD_DIR}" && \
 	./travis-build/test.sh
 
 cover_linux:

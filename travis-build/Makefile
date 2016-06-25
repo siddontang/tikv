@@ -35,13 +35,10 @@ ${KCOV_DIR}/kcov:
 	cp src/kcov ${KCOV_DIR}/kcov
 
 ${ETCD_DIR}/etcd:
-	export GOROOT="${ETCD_DIR}/go" && \
-	export PATH="${GOROOT}/bin:${PATH}" && \
-	export GOPATH=${ETCD_DIR} && \
-	git clone --depth=1 https://github.com/coreos/etcd.git ${GOPATH}/src/github.com/coreos/etcd && \
-  	cd ${GOPATH}/src/github.com/coreos/etcd && \
+	git clone --depth=1 https://github.com/coreos/etcd.git "${GOPATH}/src/github.com/coreos/etcd" && \
+  	cd "${GOPATH}/src/github.com/coreos/etcd" && \
   	./build && \
-  	cp -f ./bin/etcd ${ETCD_DIR}/etcd
+  	cp -f ./bin/etcd "${ETCD_DIR}/etcd"
 
 linux_go:
 	curl -L https://storage.googleapis.com/golang/go1.6.2.linux-amd64.tar.gz -o go.tar.gz && \

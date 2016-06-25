@@ -51,13 +51,13 @@ mac_go:
 	curl -L https://storage.googleapis.com/golang/go1.6.2.darwin-amd64.tar.gz -o go.tar.gz && \
 	tar -C ${ETCD_DIR} -xzf go.tar.gz 
 
-prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov linux_go etcd
+prepare_linux: ${ROCKSDB_DIR}/librocksdb.so ${KCOV_DIR}/kcov linux_go ${ETCD_DIR}/etcd
 
 prepare_brew: 
 	brew update && \
 	brew install gflags snappy rocksdb
 
-prepare_osx: prepare_brew mac_go etcd
+prepare_osx: prepare_brew mac_go ${ETCD_DIR}/etcd
 	
 test_linux:
 	export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ROCKSDB_DIR}" && \

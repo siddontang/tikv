@@ -38,8 +38,8 @@ ${ETCD_DIR}/etcd:
 	export GOROOT="${ETCD_DIR}/go" && \
 	export PATH="${GOROOT}/bin:${PATH}" && \
 	export GOPATH=${ETCD_DIR} && \
-	git clone --depth=1 https://github.com/coreos/etcd.git $GOPATH/src/github.com/coreos/etcd && \
-  	cd $GOPATH/src/github.com/coreos/etcd && \
+	git clone --depth=1 https://github.com/coreos/etcd.git ${GOPATH}/src/github.com/coreos/etcd && \
+  	cd ${GOPATH}/src/github.com/coreos/etcd && \
   	./build && \
   	cp -f ./bin/etcd ${ETCD_DIR}/etcd
 

@@ -106,10 +106,12 @@ mod tests {
 
         let sock = TcpStream::connect(&addr.parse().unwrap()).unwrap();
 
-        sock.set_send_buffer_size(100).unwrap();
-        assert_eq!(sock.send_buffer_size().unwrap(), 100);
+        let send_size = sock.send_buffer_size().unwrap() + 64;
+        sock.set_send_buffer_size(send_size).unwrap();
+        assert_eq!(sock.send_buffer_size().unwrap(), send_size);
 
-        sock.set_recv_buffer_size(100).unwrap();
-        assert_eq!(sock.recv_buffer_size().unwrap(), 100);
+        let recv_size = sock.recv_buffer_size().unwrap() + 64;
+        sock.set_recv_buffer_size(recv_size).unwrap();
+        assert_eq!(sock.recv_buffer_size().unwrap(), recv_size);
     }
 }

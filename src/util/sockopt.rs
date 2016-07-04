@@ -106,12 +106,19 @@ mod tests {
 
         let sock = TcpStream::connect(&addr.parse().unwrap()).unwrap();
 
-        let send_size = sock.send_buffer_size().unwrap() + 64;
-        sock.set_send_buffer_size(send_size).unwrap();
-        assert_eq!(sock.send_buffer_size().unwrap(), send_size);
+        // For linux, getsockopt will return doubled value set by setsockopt.
+        // But for Mac OS X, getsockopt will the same value. So we can only
+        // check value changed.
+        sock.set_send_buffer_size(4096).unwrap();
+        let s1 = sock.send_buffer_size().unwrap();
+        sock.set_send_buffer_size(8192).unwrap();
+        let s2 = sock.send_buffer_size().unwrap();
+        assert!(s2 > s1);
 
-        let recv_size = sock.recv_buffer_size().unwrap() + 64;
-        sock.set_recv_buffer_size(recv_size).unwrap();
-        assert_eq!(sock.recv_buffer_size().unwrap(), recv_size);
+        sock.set_recv_buffer_size(4096).unwrap();
+        let r1 = sock.recv_buffer_size().unwrap();
+        sock.set_recv_buffer_size(8192).unwrap();
+        let r2 = sock.recv_buffer_size().unwrap();
+        assert!(r2 > r1);
     }
 }

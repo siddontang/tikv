@@ -11,14 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::sync::mpsc::Sender;
 use std::net::SocketAddr;
 use kvproto::raft_serverpb::RaftMessage;
 use kvproto::raft_cmdpb::RaftCmdRequest;
+use spin::RwLock;
 
 use util::transport::SendCh;
-use util::HandyRwLock;
 use util::worker::{Scheduler, Stopped};
 use util::collections::HashSet;
 use raft::SnapshotStatus;
@@ -182,14 +182,14 @@ impl<T: RaftStoreRouter + 'static, S: StoreAddrResolver + 'static> ServerTranspo
 
     fn send_store(&self, store_id: u64, msg: RaftMessage) {
         // check the corresponding token for store.
-        let addr = self.raft_client.rl().addrs.get(&store_id).cloned();
+        let addr = self.raft_client.read().addrs.get(&store_id).cloned();
         if let Some(addr) = addr {
             self.write_data(store_id, addr, msg);
             return;
         }
 
         // No connection, try to resolve it.
-        if self.resolving.rl().contains(&store_id) {
+        if self.resolving.read().contains(&store_id) {
             RESOLVE_STORE_COUNTER
                 .with_label_values(&["resolving"])
                 .inc();
@@ -206,7 +206,7 @@ impl<T: RaftStoreRouter + 'static, S: StoreAddrResolver + 'static> ServerTranspo
         debug!("begin to resolve store {} address", store_id);
         RESOLVE_STORE_COUNTER.with_label_values(&["resolve"]).inc();
 
-        self.resolving.wl().insert(store_id);
+        self.resolving.write().insert(store_id);
         self.resolve(store_id, msg);
     }
 
@@ -214,7 +214,7 @@ impl<T: RaftStoreRouter + 'static, S: StoreAddrResolver + 'static> ServerTranspo
         let trans = self.clone();
         let cb = box move |addr| {
             // clear resolving.
-            trans.resolving.wl().remove(&store_id);
+            trans.resolving.write().remove(&store_id);
 
             if let Err(e) = addr {
                 RESOLVE_STORE_COUNTER.with_label_values(&["failed"]).inc();
@@ -226,10 +226,10 @@ impl<T: RaftStoreRouter + 'static, S: StoreAddrResolver + 'static> ServerTranspo
             RESOLVE_STORE_COUNTER.with_label_values(&["success"]).inc();
             let addr = addr.unwrap();
             info!("resolve store {} address ok, addr {}", store_id, addr);
-            trans.raft_client.wl().addrs.insert(store_id, addr);
+            trans.raft_client.write().addrs.insert(store_id, addr);
             trans.write_data(store_id, addr, msg);
             // There may be no messages in the near future, so flush it immediately.
-            trans.raft_client.wl().flush();
+            trans.raft_client.write().flush();
         };
         if let Err(e) = self.resolver.resolve(store_id, cb) {
             error!("try to resolve err {:?}", e);
@@ -240,7 +240,7 @@ impl<T: RaftStoreRouter + 'static, S: StoreAddrResolver + 'static> ServerTranspo
         if msg.get_message().has_snapshot() {
             return self.send_snapshot_sock(addr, msg);
         }
-        if let Err(e) = self.raft_client.wl().send(store_id, addr, msg) {
+        if let Err(e) = self.raft_client.write().send(store_id, addr, msg) {
             error!("send raft msg err {:?}", e);
         }
     }
@@ -296,7 +296,7 @@ impl<T: RaftStoreRouter + 'static, S: StoreAddrResolver + 'static> ServerTranspo
     }
 
     pub fn flush_raft_client(&mut self) {
-        self.raft_client.wl().flush();
+        self.raft_client.write().flush();
     }
 }
 

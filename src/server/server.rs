@@ -11,13 +11,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::net::{IpAddr, SocketAddr};
 use std::str::FromStr;
 
 use grpc::{ChannelBuilder, EnvBuilder, Environment, Server as GrpcServer, ServerBuilder};
 use kvproto::tikvpb_grpc::*;
 use kvproto::debugpb_grpc::create_debug;
+use spin::RwLock;
 
 use util::worker::{FutureScheduler, Worker};
 use storage::Storage;

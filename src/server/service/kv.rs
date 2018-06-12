@@ -1065,6 +1065,28 @@ impl<T: RaftStoreRouter + 'static> tikvpb_grpc::Tikv for Service<T> {
         );
     }
 
+    fn m_raft(
+        &self,
+        ctx: RpcContext,
+        stream: RequestStream<RaftMessages>,
+        _: ClientStreamingSink<Done>,
+    ) {
+        let ch = self.ch.clone();
+        ctx.spawn(
+            stream
+                .map_err(Error::from)
+                .for_each(move |mut msg| {
+                    RAFT_MESSAGE_RECV_COUNTER.inc();
+                    for m in msg.take_msgs().into_vec() {
+                        let _ = ch.send_raft_msg(m);
+                    }
+                    future::ok::<_, Error>(())
+                })
+                .map_err(|e| error!("send raft msg to raft store fail: {}", e))
+                .then(|_| future::ok::<_, ()>(())),
+        );
+    }
+
     fn snapshot(
         &self,
         ctx: RpcContext,

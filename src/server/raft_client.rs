@@ -19,8 +19,9 @@ use futures::sync::mpsc::{self, UnboundedSender};
 use futures::sync::oneshot::{self, Sender};
 use futures::{stream, Future, Sink, Stream};
 use grpc::{ChannelBuilder, Environment, WriteFlags};
-use kvproto::raft_serverpb::RaftMessage;
+use kvproto::raft_serverpb::{RaftMessage, RaftMessages};
 use kvproto::tikvpb_grpc::TikvClient;
+use protobuf::RepeatedField;
 
 use super::metrics::*;
 use super::{Config, Error, Result};
@@ -34,8 +35,8 @@ const PRESERVED_MSG_BUFFER_COUNT: usize = 1024;
 static CONN_ID: AtomicI32 = AtomicI32::new(0);
 
 struct Conn {
-    stream: UnboundedSender<Vec<(RaftMessage, WriteFlags)>>,
-    buffer: Option<Vec<(RaftMessage, WriteFlags)>>,
+    stream: UnboundedSender<Vec<(RaftMessages, WriteFlags)>>,
+    buffer: Option<Vec<RaftMessage>>,
     store_id: u64,
     alive: Arc<AtomicBool>,
 
@@ -71,7 +72,7 @@ impl Conn {
         let client = TikvClient::new(channel);
         let (tx, rx) = mpsc::unbounded();
         let (tx_close, rx_close) = oneshot::channel();
-        let (sink, _) = client.raft().unwrap();
+        let (sink, _) = client.m_raft().unwrap();
         let addr = addr.to_owned();
         client.spawn(
             rx_close
@@ -147,7 +148,7 @@ impl RaftClient {
         conn.buffer
             .as_mut()
             .unwrap()
-            .push((msg, WriteFlags::default().buffer_hint(true)));
+            .push(msg);
         Ok(())
     }
 
@@ -170,9 +171,10 @@ impl RaftClient {
             }
 
             counter += 1;
-            let mut msgs = conn.buffer.take().unwrap();
-            msgs.last_mut().unwrap().1 = WriteFlags::default();
-            if let Err(e) = conn.stream.unbounded_send(msgs) {
+            let msgs = conn.buffer.take().unwrap();
+            let mut msg = RaftMessages::new();
+            msg.set_msgs(RepeatedField::from_vec(msgs));
+            if let Err(e) = conn.stream.unbounded_send(vec![(msg, WriteFlags::default())]) {
                 error!(
                     "server: drop conn with tikv endpoint {} flush conn error: {:?}",
                     addr, e

@@ -575,21 +575,21 @@ impl<E: Engine> Drop for Storage<E> {
             return;
         }
 
-<<<<<<< HEAD
-        self.sched.shutdown();
-=======
-        // This is the last reference of the storage. Now all its references are dropped. Stop and
-        // destroy the storage now.
-        let mut worker = self.worker.lock().unwrap();
-        if let Err(e) = worker.schedule(Msg::Quit) {
-            error!("Failed to ask scheduler to quit: {:?}", e);
-        }
 
-        let h = worker.stop().unwrap();
-        if let Err(e) = h.join() {
-            error!("Failed to join sched_handle: {:?}", e);
-        }
->>>>>>> master
+        self.sched.shutdown();
+
+        // // This is the last reference of the storage. Now all its references are dropped. Stop and
+        // // destroy the storage now.
+        // let mut worker = self.worker.lock().unwrap();
+        // if let Err(e) = worker.schedule(Msg::Quit) {
+        //     error!("Failed to ask scheduler to quit: {:?}", e);
+        // }
+
+        // let h = worker.stop().unwrap();
+        // if let Err(e) = h.join() {
+        //     error!("Failed to join sched_handle: {:?}", e);
+        // }
+
 
         let r = self.gc_worker.stop();
         if let Err(e) = r {

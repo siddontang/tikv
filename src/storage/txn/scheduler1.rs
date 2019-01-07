@@ -66,6 +66,8 @@ struct TaskContext {
     latch_timer: Option<HistogramTimer>,
     // Total duration of a command.
     _cmd_timer: HistogramTimer,
+
+    task: Option<Task>,
 }
 
 impl TaskContext {
@@ -89,6 +91,7 @@ impl TaskContext {
             _cmd_timer: SCHED_HISTOGRAM_VEC
                 .with_label_values(&[cmd.tag()])
                 .start_coarse_timer(),
+            task: None,            
         }
     }
 
@@ -100,12 +103,9 @@ impl TaskContext {
 use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
-const TASKS_SLOTS_NUM: usize = 1024;
+const TASKS_SLOTS_NUM: usize = 4096;
 
 struct SchedulerInner<E: Engine> {
-    // cid -> Task
-    pending_tasks: Vec<Mutex<HashMap<u64, Task>>>,
-
     // cid -> TaskContext
     task_contexts: Vec<Mutex<HashMap<u64, TaskContext>>>,
 
@@ -142,11 +142,13 @@ impl<E: Engine> SchedulerInner<E> {
     }
 
     fn dequeue_task(&self, cid: u64) -> Task {
-        let task = self.pending_tasks[id_index(cid)]
+        let task = self.task_contexts[id_index(cid)]
             .lock()
             .unwrap()
-            .remove(&cid)
-            .unwrap();
+            .get_mut(&cid)
+            .unwrap()
+            .task.take().unwrap();
+
         assert_eq!(task.cid, cid);
         task
     }
@@ -154,25 +156,19 @@ impl<E: Engine> SchedulerInner<E> {
     fn enqueue_task(&self, task: Task, callback: StorageCb) {
         let cid = task.cid;
 
-        let tctx = {
+        let mut tctx = {
             let cmd = task.cmd();
             let lock = self.gen_lock(cmd);
             TaskContext::new(lock, callback, cmd)
         };
+
+        tctx.task = Some(task);
 
         let running_write_bytes = self
             .running_write_bytes
             .fetch_add(tctx.write_bytes, Ordering::AcqRel) as i64;
         SCHED_WRITING_BYTES_GAUGE.set(running_write_bytes + tctx.write_bytes as i64);
 
-        if self.pending_tasks[id_index(cid)]
-            .lock()
-            .unwrap()
-            .insert(cid, task)
-            .is_some()
-        {
-            panic!("command cid={} shouldn't exist", cid);
-        }
         // SCHED_CONTEX_GAUGE.set(self.pending_tasks.len() as i64);
         if self.task_contexts[id_index(cid)]
             .lock()
@@ -253,10 +249,8 @@ impl<E: Engine> Scheduler<E> {
         sched_pending_write_threshold: usize,
     ) -> Self {
         let factory = SchedContextFactory::new(engine.clone());
-        let mut pending_tasks = Vec::with_capacity(TASKS_SLOTS_NUM);
         let mut task_contexts = Vec::with_capacity(TASKS_SLOTS_NUM);
         for _ in 0..TASKS_SLOTS_NUM {
-            pending_tasks.push(Mutex::new(Default::default()));
             task_contexts.push(Mutex::new(Default::default()));
         }
         let worker_pool = ThreadPoolBuilder::new(thd_name!("sched-worker-pool"), factory.clone())
@@ -266,7 +260,6 @@ impl<E: Engine> Scheduler<E> {
             ThreadPoolBuilder::new(thd_name!("sched-high-pri-pool"), factory).build();
 
         let inner = Arc::new(SchedulerInner {
-            pending_tasks: pending_tasks,
             task_contexts: task_contexts,
             id_alloc: AtomicU64::new(0),
             latches: MutexLatches::new(concurrency),
